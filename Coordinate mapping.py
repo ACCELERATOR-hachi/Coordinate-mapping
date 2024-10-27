@@ -1,35 +1,65 @@
 import numpy as np
 
+# def compute_transformation_lstsq(src_points, dst_points):
+#     """ 使用最小二乘法计算旋转和平移 计算旋转角度"""
+#     assert src_points.shape == dst_points.shape, "源点和目标点的形状不一致！"
+#     assert src_points.shape[1] == 2, "每个点必须是二维的！"
+#
+#     # 计算源点和目标点的均值
+#     src_center = np.mean(src_points, axis=0)
+#     dst_center = np.mean(dst_points, axis=0)
+#
+#     # 中心化
+#     src_centered = src_points - src_center
+#     dst_centered = dst_points - dst_center
+#
+#     # 组合源点的坐标
+#     A = np.zeros((src_centered.shape[0], 3))
+#     A[:, 0] = src_centered[:, 0]
+#     A[:, 1] = -src_centered[:, 1]
+#     A[:, 2] = 1  # 常数项
+#
+#     # 组合目标点的坐标
+#     b = dst_centered[:, 0]
+#
+#     # 最小二乘拟合
+#     params, residuals, rank, s = np.linalg.lstsq(A, b, rcond=None)
+#
+#     # 提取旋转角度和平移量
+#     theta = np.arctan2(params[1], params[0])
+#     R = np.array([[np.cos(theta), -np.sin(theta)],
+#                   [np.sin(theta), np.cos(theta)]])
+#
+#     t = dst_center - R @ src_center
+#
+#     return R, t
 def compute_transformation_lstsq(src_points, dst_points):
-    """ 使用最小二乘法计算旋转和平移 """
-    assert src_points.shape == dst_points.shape
-    assert src_points.shape[1] == 2
+    """ 使用最小二乘法计算旋转和平移 不计算旋转角度"""
+    assert src_points.shape == dst_points.shape, "源点和目标点的形状不一致！"
+    assert src_points.shape[1] == 2, "每个点必须是二维的！"
 
-    # 计算源点和目标点的均值
     src_center = np.mean(src_points, axis=0)
     dst_center = np.mean(dst_points, axis=0)
 
-    # 中心化
     src_centered = src_points - src_center
     dst_centered = dst_points - dst_center
 
-    # 组合源点的坐标
+    # 构造最小二乘法的矩阵
     A = np.zeros((src_centered.shape[0], 3))
     A[:, 0] = src_centered[:, 0]
     A[:, 1] = -src_centered[:, 1]
     A[:, 2] = 1  # 常数项
 
-    # 组合目标点的坐标
     b = dst_centered[:, 0]
 
     # 最小二乘拟合
     params, residuals, rank, s = np.linalg.lstsq(A, b, rcond=None)
 
-    # 提取旋转角度和平移量
-    theta = np.arctan2(params[1], params[0])
-    R = np.array([[np.cos(theta), -np.sin(theta)],
-                  [np.sin(theta), np.cos(theta)]])
+    # 直接使用 params[0] 和 params[1] 作为 R 的元素
+    R = np.array([[params[0], -params[1]],
+                  [params[1], params[0]]])  # 这里的 params[0] 和 params[1] 分别对应 cos 和 sin
 
+    # 计算平移向量
     t = dst_center - R @ src_center
 
     return R, t
